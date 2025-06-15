@@ -7,6 +7,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/generate-vhdl", generateVhdlRoute);
+app.use("/api", generateVhdlRoute);
 
 export default app;

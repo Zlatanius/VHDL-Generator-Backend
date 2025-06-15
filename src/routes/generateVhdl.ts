@@ -8,7 +8,7 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-router.post("/", async (req, res): Promise<any> => {
+router.post("/generate-vhdl", async (req, res): Promise<any> => {
   const { description } = req.body;
 
   if (!description) {
