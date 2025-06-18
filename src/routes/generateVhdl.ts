@@ -22,8 +22,16 @@ router.post("/generate-vhdl", async (req, res): Promise<any> => {
       messages: [
         {
           role: "system",
-          content:
-            "You are a VHDL code generation assistant. Given a component specification, return only valid and complete VHDL code.",
+          content: `You are a hardware engineer writing VHDL for synthesis on an FPGA. Given the following component specification, write a complete VHDL module following RTL design principles:
+
+Use IEEE standard libraries: IEEE.STD_LOGIC_1164.ALL, IEEE.NUMERIC_STD.ALL
+Use one clock domain, with rising edge sensitivity
+All logic must be clocked and synchronous, except for purely combinational outputs
+Use one process per clocked logic block, and a separate process for purely combinational logic
+All inputs and outputs should use std_logic or std_logic_vector
+Avoid latches; initialize all registers properly
+Include comments for each part of the architecture
+Follow clean indentation and naming conventions`,
         },
         {
           role: "user",

@@ -23,3 +23,6 @@ Thumbs.db
 # Swap files / temp
 *.swp
 *.swo
+
+# GHDL Output
+**/ghdl_out/
