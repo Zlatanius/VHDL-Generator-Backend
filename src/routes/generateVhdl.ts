@@ -1,52 +1,47 @@
-import express from "express";
-import Groq from "groq-sdk";
+import { Request, Response, Router } from "express";
+import { generateVhdl } from "../services/groqService";
+import { runSimulation } from "../services/ghdlService";
 
-const router = express.Router();
+const router = Router();
 
-// Initialize Groq client with API key from environment
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+router.post(
+  "/generate-vhdl",
+  async (req: Request, res: Response): Promise<void> => {
+    const { description } = req.body;
 
-router.post("/generate-vhdl", async (req, res): Promise<any> => {
-  const { description } = req.body;
+    if (!description) {
+      res.status(400).json({ error: "Missing description" });
+      return;
+    }
 
-  if (!description) {
-    return res.status(400).json({ error: "Missing description" });
+    try {
+      const generatedCode = await generateVhdl(description);
+      res.json({ code: generatedCode.trim() });
+    } catch (error) {
+      console.error("Groq API error:", error);
+      res.status(500).json({ error: "Failed to generate code" });
+    }
   }
+);
 
-  try {
-    // Send prompt to Groq's LLaMA-3 model
-    const chatCompletion = await groq.chat.completions.create({
-      model: "llama3-70b-8192",
-      messages: [
-        {
-          role: "system",
-          content: `You are a hardware engineer writing VHDL for synthesis on an FPGA. Given the following component specification, write a complete VHDL module following RTL design principles:
+router.post(
+  "/generate-and-test-vhdl",
+  async (req: Request, res: Response): Promise<void> => {
+    const { description, testbench, topEntity } = req.body;
 
-Use IEEE standard libraries: IEEE.STD_LOGIC_1164.ALL, IEEE.NUMERIC_STD.ALL
-Use one clock domain, with rising edge sensitivity
-All logic must be clocked and synchronous, except for purely combinational outputs
-Use one process per clocked logic block, and a separate process for purely combinational logic
-All inputs and outputs should use std_logic or std_logic_vector
-Avoid latches; initialize all registers properly
-Include comments for each part of the architecture
-Follow clean indentation and naming conventions`,
-        },
-        {
-          role: "user",
-          content: description,
-        },
-      ],
-    });
+    if (!description || !testbench || !topEntity) {
+      res.status(400).send("Missing design, testbench, or topEntity");
+      return;
+    }
 
-    const generatedCode = chatCompletion.choices[0]?.message?.content ?? "";
-
-    res.json({ code: generatedCode.trim() });
-  } catch (error) {
-    console.error("Groq API error:", error);
-    res.status(500).json({ error: "Failed to generate code" });
+    try {
+      const design = await generateVhdl(description);
+      const output = await runSimulation(design, testbench, topEntity);
+      res.send({ design: design, simulation_output: output });
+    } catch (err) {
+      res.status(500).send(`Simulation failed:\n${err}`);
+    }
   }
-});
+);
 
 export default router;
