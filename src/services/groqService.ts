@@ -4,9 +4,18 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
+const extractVhdlBlock = (source: string): string => {
+  const splitSource = source.split("```");
+  let vhdl = splitSource[1] || "";
+  if (vhdl.trim().toLowerCase().startsWith("vhdl")) {
+    vhdl = vhdl.trim().slice(4).trimStart();
+  }
+  return vhdl;
+};
+
 export async function generateVhdl(description: string): Promise<string> {
   const chatCompletion = await groq.chat.completions.create({
-    model: "llama3-70b-8192",
+    model: "meta-llama/llama-4-maverick-17b-128e-instruct",
     messages: [
       {
         role: "system",
@@ -20,7 +29,8 @@ All inputs and outputs should use std_logic or std_logic_vector
 Avoid latches; initialize all registers properly
 Include comments for each part of the architecture
 Follow clean indentation and naming conventions
-IMPORTANT: GENERATE NOTHING BUT THE CODE.`,
+All code should be in VHDL 2008 standard
+IMPORTANT: GENERATE NOTHING BUT THE CODE. NO TEXT SHOULD BE IN THE RESPONSE!!! DO NOT PUT VHDL AT THE START OF THE FILE!!!`,
       },
       {
         role: "user",
@@ -29,5 +39,36 @@ IMPORTANT: GENERATE NOTHING BUT THE CODE.`,
     ],
   });
 
-  return chatCompletion.choices[0]?.message?.content ?? "";
+  return extractVhdlBlock(chatCompletion.choices[0]?.message?.content ?? "");
+}
+
+export async function correctVhdl(
+  description: string,
+  design: string,
+  ghdlError: string
+): Promise<string> {
+  const chatCompletion = await groq.chat.completions.create({
+    model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a VHDL expert. You fix VHDL code so that it compiles and passes its testbench. Always return the full, corrected VHDL module. Do not explain anything. All code should be in VHDL 2008 standard",
+      },
+      {
+        role: "user",
+        content: `The following VHDL module is failing when running in simulation.
+Component description:
+${description}
+
+Simulation output:
+${ghdlError}
+
+Component code:
+${design}        `,
+      },
+    ],
+  });
+
+  return extractVhdlBlock(chatCompletion.choices[0]?.message?.content ?? "");
 }

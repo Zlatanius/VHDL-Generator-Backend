@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import { generateVhdl } from "../services/groqService";
-import { runSimulation } from "../services/ghdlService";
+import { generateAndTestVhdl } from "../services/vhdlGenerationService";
 
 const router = Router();
 
@@ -8,6 +8,8 @@ router.post(
   "/generate-vhdl",
   async (req: Request, res: Response): Promise<void> => {
     const { description } = req.body;
+
+    console.log("generate-vhdl route called");
 
     if (!description) {
       res.status(400).json({ error: "Missing description" });
@@ -29,17 +31,25 @@ router.post(
   async (req: Request, res: Response): Promise<void> => {
     const { description, testbench, topEntity } = req.body;
 
+    console.log("generate-and-test-vhdl route called");
+
     if (!description || !testbench || !topEntity) {
       res.status(400).send("Missing design, testbench, or topEntity");
       return;
     }
 
     try {
-      const design = await generateVhdl(description);
-      const output = await runSimulation(design, testbench, topEntity);
-      res.send({ design: design, simulation_output: output });
+      const result = await generateAndTestVhdl(
+        description,
+        testbench,
+        topEntity
+      );
+      console.log(JSON.stringify(result, null, 2));
+      res.send(result);
     } catch (err) {
-      res.status(500).send(`Simulation failed:\n${err}`);
+      res
+        .status(500)
+        .send({ error: `VHDL generation and simulation failed:\n${err}` });
     }
   }
 );
