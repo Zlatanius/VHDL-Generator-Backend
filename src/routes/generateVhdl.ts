@@ -1,44 +1,57 @@
-import express from "express";
-import Groq from "groq-sdk";
+import { Request, Response, Router } from "express";
+import { generateVhdl } from "../services/groqService";
+import { generateAndTestVhdl } from "../services/vhdlGenerationService";
 
-const router = express.Router();
+const router = Router();
 
-// Initialize Groq client with API key from environment
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+router.post(
+  "/generate-vhdl",
+  async (req: Request, res: Response): Promise<void> => {
+    const { description } = req.body;
 
-router.post("/generate-vhdl", async (req, res): Promise<any> => {
-  const { description } = req.body;
+    console.log("generate-vhdl route called");
 
-  if (!description) {
-    return res.status(400).json({ error: "Missing description" });
+    if (!description) {
+      res.status(400).json({ error: "Missing description" });
+      return;
+    }
+
+    try {
+      const generatedCode = await generateVhdl(description);
+      res.json({ code: generatedCode.trim() });
+    } catch (error) {
+      console.error("Groq API error:", error);
+      res.status(500).json({ error: "Failed to generate code" });
+    }
   }
+);
 
-  try {
-    // Send prompt to Groq's LLaMA-3 model
-    const chatCompletion = await groq.chat.completions.create({
-      model: "llama3-70b-8192",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a VHDL code generation assistant. Given a component specification, return only valid and complete VHDL code.",
-        },
-        {
-          role: "user",
-          content: description,
-        },
-      ],
-    });
+router.post(
+  "/generate-and-test-vhdl",
+  async (req: Request, res: Response): Promise<void> => {
+    const { description, testbench, topEntity } = req.body;
 
-    const generatedCode = chatCompletion.choices[0]?.message?.content ?? "";
+    console.log("generate-and-test-vhdl route called");
 
-    res.json({ code: generatedCode.trim() });
-  } catch (error) {
-    console.error("Groq API error:", error);
-    res.status(500).json({ error: "Failed to generate code" });
+    if (!description || !testbench || !topEntity) {
+      res.status(400).send("Missing design, testbench, or topEntity");
+      return;
+    }
+
+    try {
+      const result = await generateAndTestVhdl(
+        description,
+        testbench,
+        topEntity
+      );
+      console.log(JSON.stringify(result, null, 2));
+      res.send(result);
+    } catch (err) {
+      res
+        .status(500)
+        .send({ error: `VHDL generation and simulation failed:\n${err}` });
+    }
   }
-});
+);
 
 export default router;
