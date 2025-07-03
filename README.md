@@ -34,8 +34,8 @@ Server će biti dostupan na adresi http://localhost:4000.
 
 🧱 Tehnologije
 
-    Node.js
+- Node.js
 
-    Express.js
+- Express.js
 
-    Groq LLM API
+- Groq LLM API
