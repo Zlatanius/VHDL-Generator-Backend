@@ -28,7 +28,7 @@ MAX_ATTEMPTS: Maksimalan broj pokušaja korekcije koda
 
 Server se lokalno pokreće sa slijedećom komandom:
 
-    npm start
+    npm run dev
 
 Server će biti dostupan na adresi http://localhost:4000.
 
