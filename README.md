@@ -1,7 +1,7 @@
 # VHDL Generator Backend
 
 Ovaj backend servis omogućava generisanje VHDL koda koristeći LLM model preko Groq API-ja. Na osnovu tekstualnog opisa komponente, backend šalje zahtjev modelu i vraća generisani VHDL kod.
-📦 Instalacija
+#### 📦 Instalacija
 
 Kloniranje repozitorija:
 
@@ -18,13 +18,20 @@ Nakon instaliranja zavisnosti potrebno je kreirati .env fajl u root direktoriju 
     PORT=4000
     MAX_ATTEMPTS=3
 
-GROQ_API_KEY: Tvoj API ključ za Groq
+**GROQ_API_KEY**: Tvoj API ključ za Groq
 
-PORT: Port na kojem server pokreće aplikaciju (default je 4000)
+**PORT**: Port na kojem server pokreće aplikaciju (default je 4000)
 
-MAX_ATTEMPTS: Maksimalan broj pokušaja korekcije koda
+**MAX_ATTEMPTS**: Maksimalan broj pokušaja korekcije koda
 
-🚀 Pokretanje servera
+#### 🛠️ GHDL instalacija:
+
+Za lokalno testiranje i simulaciju VHDL koda, potrebno je imati instaliran **GHDL**.
+
+Uputstvo za instalaciju GHDL simulatora možeš pronaći na sljedećem linku:  
+[http://ghdl.free.fr/site/pmwiki.php?n=Main.Installation](http://ghdl.free.fr/site/pmwiki.php?n=Main.Installation)
+
+#### 🚀 Pokretanje servera
 
 Server se lokalno pokreće sa slijedećom komandom:
 
@@ -32,7 +39,7 @@ Server se lokalno pokreće sa slijedećom komandom:
 
 Server će biti dostupan na adresi http://localhost:4000.
 
-🧱 Tehnologije
+#### 🧱 Tehnologije
 
 - Node.js
 
